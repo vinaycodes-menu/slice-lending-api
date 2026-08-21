@@ -1,11 +1,14 @@
 package com.slicelending.common.api.error;
 
 import com.slicelending.identity.application.exception.DuplicateEmailException;
+import com.slicelending.identity.application.exception.ExpiredVerificationTokenException;
+import com.slicelending.identity.application.exception.InvalidVerificationTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -58,5 +61,60 @@ public class GlobalExceptionHandler {
        return ResponseEntity.status(status).body(errorResponse);
 
    }
+
+   @ExceptionHandler(InvalidVerificationTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidVerificationToken(
+            InvalidVerificationTokenException exception, HttpServletRequest request
+   ){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                "Invalid_verification",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+        return ResponseEntity.status(status).body(errorResponse);
+   }
+
+   @ExceptionHandler(ExpiredVerificationTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleExpiredVerificationToken(
+            ExpiredVerificationTokenException exception, HttpServletRequest request
+   ){
+        HttpStatus status = HttpStatus.GONE;
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                "EXPIRED_VERIFICATION_TOKEN",
+                request.getRequestURI(),
+                exception.getMessage(),
+                Map.of()
+        );
+        return  ResponseEntity.status(status).body(errorResponse);
+
+
+
+
+
+   }
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingRequestParameter(
+            MissingServletRequestParameterException exception, HttpServletRequest request
+    ){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                "MISSING_REQUEST_PARAMETER",
+                "Required request parameter ' " +
+                        exception.getParameterName() +
+                        " ' is missing",
+                request.getRequestURI(),
+                Map.of()
+        );
+        return ResponseEntity.status(status).body(errorResponse);
+    }
 
 }

@@ -44,6 +44,18 @@ public class User {
 
     }
 
+    // Safe activation method
+    public void activateAfterEmailVerification() {
+        if (accountStatus != AccountStatus.PENDING_VERIFICATION) {
+            throw new IllegalStateException(
+                    "Only a pending-verification account can be activated"
+            );
+        }
+
+        this.accountStatus = AccountStatus.ACTIVE;
+    }
+
+
     public Long getId(){
         return id;
     }

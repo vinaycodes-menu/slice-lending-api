@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.slicelending.customer.domain.CustomerProfile;
 import com.slicelending.customer.infrastructure.CustomerProfileRepository;
 import com.slicelending.identity.api.RegisterCustomerRequest;
+import com.slicelending.identity.application.event.EmailVerificationRequestedEvent;
 import com.slicelending.identity.application.exception.DuplicateEmailException;
 import com.slicelending.identity.domain.AccountStatus;
 import com.slicelending.identity.domain.User;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,6 +35,12 @@ class RegistrationServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private EmailVerificationTokenService emailVerificationTokenService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private RegistrationService registrationService;
@@ -62,7 +70,9 @@ class RegistrationServiceTest {
 
         verifyNoInteractions(
                 passwordEncoder,
-                customerProfileRepository
+                customerProfileRepository,
+                emailVerificationTokenService,
+                eventPublisher
         );
     }
 
@@ -99,6 +109,8 @@ class RegistrationServiceTest {
 
         when(customerProfileRepository.save(any(CustomerProfile.class)))
                 .thenReturn(savedCustomerProfile);
+        when(emailVerificationTokenService.createInitialToken(savedUser))
+                .thenReturn("test-raw-token");
 
         // Act
         RegisterCustomerResponse response =
@@ -130,7 +142,21 @@ class RegistrationServiceTest {
         verify(customerProfileRepository)
                 .save(any(CustomerProfile.class));
 
+        verify(emailVerificationTokenService)
+                .createInitialToken(savedUser);
+
+        verify(eventPublisher)
+                .publishEvent(any(EmailVerificationRequestedEvent.class));
+
+        verify(emailVerificationTokenService)
+                .createInitialToken(savedUser);
+
+        verify(eventPublisher)
+                .publishEvent(any(EmailVerificationRequestedEvent.class));
+
     }
+
+
 
 
 }

@@ -9,6 +9,6 @@ public record ApiErrorResponse(
         String code,
         String message,
         String path,
-        Map<String, String > fieldErrors
+        Map<String, String> fieldErrors
 ) {
 }
