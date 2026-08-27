@@ -8,6 +8,7 @@ import com.slicelending.identity.domain.AccountStatus;
 import com.slicelending.identity.domain.EmailVerificationToken;
 import com.slicelending.identity.domain.User;
 import com.slicelending.identity.infrastructure.EmailVerificationTokenRepository;
+import com.slicelending.identity.infrastructure.config.EmailVerificationProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -30,6 +32,9 @@ class EmailVerificationTokenServiceTest {
     @Mock
     private EmailVerificationTokenRepository tokenRepository;
 
+    @Mock
+    private EmailVerificationProperties properties;
+
     @InjectMocks
     private EmailVerificationTokenService tokenService;
 
@@ -42,6 +47,7 @@ class EmailVerificationTokenServiceTest {
 
         when(tokenGenerator.generateToken()).thenReturn(rawToken);
         when(tokenGenerator.hashToken(rawToken)).thenReturn(tokenHash);
+        when(properties.tokenExpiration()).thenReturn(Duration.ofHours(1));
 
         // Act
         String result = tokenService.createInitialToken(user);
@@ -221,6 +227,45 @@ class EmailVerificationTokenServiceTest {
                         user.getAccountStatus()
                 ),
                 () -> assertEquals(originalUsedAt, usedToken.getUsedAt())
+        );
+    }
+
+    @Test
+    void shouldRejectRevokedVerificationToken() {
+        // Arrange
+        String rawToken = "revoked-raw-token";
+        String tokenHash = "f".repeat(64);
+
+        User user = new User("vinay@example.com", "password-hash");
+
+        EmailVerificationToken revokedToken =
+                new EmailVerificationToken(
+                        user,
+                        tokenHash,
+                        OffsetDateTime.now().plusMinutes(30)
+                );
+
+        revokedToken.markAsRevoked(OffsetDateTime.now());
+
+        when(tokenGenerator.hashToken(rawToken))
+                .thenReturn(tokenHash);
+
+        when(tokenRepository.findByTokenHash(tokenHash))
+                .thenReturn(Optional.of(revokedToken));
+
+        // Act and Assert
+        assertThrows(
+                InvalidVerificationTokenException.class,
+                () -> tokenService.verifyEmail(rawToken)
+        );
+
+        assertAll(
+                () -> assertEquals(
+                        AccountStatus.PENDING_VERIFICATION,
+                        user.getAccountStatus()
+                ),
+                () -> assertFalse(revokedToken.isUsed()),
+                () -> assertTrue(revokedToken.isRevoked())
         );
     }
 }

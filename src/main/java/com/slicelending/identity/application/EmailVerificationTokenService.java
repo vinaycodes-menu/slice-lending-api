@@ -7,29 +7,33 @@ import com.slicelending.identity.domain.AccountStatus;
 import com.slicelending.identity.domain.EmailVerificationToken;
 import com.slicelending.identity.domain.User;
 import com.slicelending.identity.infrastructure.EmailVerificationTokenRepository;
+import com.slicelending.identity.infrastructure.config.EmailVerificationProperties;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.OffsetDateTime;
 
 @Service
 public class EmailVerificationTokenService {
-    private static final Duration TOKEN_EXPIRATION = Duration.ofHours(1);
 
     private final VerificationTokenGenerator tokenGenerator;
     private final EmailVerificationTokenRepository tokenRepository;
+    private final EmailVerificationProperties properties;
 
-
-    public EmailVerificationTokenService(VerificationTokenGenerator tokenGenerator, EmailVerificationTokenRepository tokenRepository) {
+    public EmailVerificationTokenService(VerificationTokenGenerator tokenGenerator, EmailVerificationTokenRepository tokenRepository, EmailVerificationProperties properties) {
         this.tokenGenerator = tokenGenerator;
         this.tokenRepository = tokenRepository;
+        this.properties = properties;
     }
-    public String createInitialToken(User user){
+    public String createInitialToken(User user) {
+        return createToken(user);
+    }
+
+    public String createToken(User user){
         String rawToken = tokenGenerator.generateToken();
         String tokenHash = tokenGenerator.hashToken(rawToken);
 
-        OffsetDateTime expiresAt = OffsetDateTime.now().plus(TOKEN_EXPIRATION);
+        OffsetDateTime expiresAt = OffsetDateTime.now().plus(properties.tokenExpiration());
 
         EmailVerificationToken verificationToken =
                 new EmailVerificationToken(
@@ -50,6 +54,11 @@ public class EmailVerificationTokenService {
         String tokenHash = tokenGenerator.hashToken(rawToken);
 
         EmailVerificationToken verificationToken = tokenRepository.findByTokenHash(tokenHash).orElseThrow(InvalidVerificationTokenException::new);
+
+
+        if(verificationToken.isRevoked()){
+            throw new InvalidVerificationTokenException();
+        }
         User user = verificationToken.getUser();
 
         if(verificationToken.isUsed()){

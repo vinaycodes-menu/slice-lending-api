@@ -18,8 +18,20 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll().requestMatchers(HttpMethod.GET, "/api/v1/auth/verify-email").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/auth/register"
+                        ).permitAll()
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/v1/auth/verify-email"
+                                ).permitAll()
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/v1/auth/resend-verification"
+                                ).permitAll()
+                        .requestMatchers(
+                                "/actuator/health").permitAll()
                         .anyRequest().authenticated()
                         )
                 .sessionManagement(session-> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
