@@ -31,6 +31,9 @@ public class EmailVerificationToken {
 
     private OffsetDateTime usedAt;
 
+   @Column(name = "revoked_at")
+   private OffsetDateTime revokedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -78,5 +81,20 @@ public class EmailVerificationToken {
     }
     public OffsetDateTime getCreatedAt(){
         return createdAt;
+    }
+
+    public boolean isRevoked(){
+        return revokedAt != null;
+    }
+
+    public void markAsRevoked(OffsetDateTime revokedAt){
+        this.revokedAt = Objects.requireNonNull(
+                revokedAt,
+                "Revoked time must not be null"
+        );
+    }
+
+    public OffsetDateTime getRevokedAt(){
+        return revokedAt;
     }
 }
