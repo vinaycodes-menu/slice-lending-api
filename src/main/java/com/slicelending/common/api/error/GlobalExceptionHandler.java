@@ -1,7 +1,9 @@
 package com.slicelending.common.api.error;
 
+import com.slicelending.identity.application.ResendEmailVerificationService;
 import com.slicelending.identity.application.exception.DuplicateEmailException;
 import com.slicelending.identity.application.exception.ExpiredVerificationTokenException;
+import com.slicelending.identity.application.exception.InvalidCredentialsException;
 import com.slicelending.identity.application.exception.InvalidVerificationTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -115,6 +117,24 @@ public class GlobalExceptionHandler {
                 Map.of()
         );
         return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception, HttpServletRequest request){
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                "INVALID_CREDENTIALS",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+
+
+        );
+        return ResponseEntity.status(status).body(errorResponse);
+
     }
 
 }
