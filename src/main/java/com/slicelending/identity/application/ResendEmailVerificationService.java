@@ -40,7 +40,7 @@ public class ResendEmailVerificationService {
     public void resend(String email) {
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
 
-        User user = userRepository.findByEmail(normalizedEmail).orElse(null);
+        User user = userRepository.findByEmailForUpdate(normalizedEmail).orElse(null);
 
         if (user == null) {
             return;

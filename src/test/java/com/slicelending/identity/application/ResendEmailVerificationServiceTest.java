@@ -52,13 +52,13 @@ class ResendEmailVerificationServiceTest {
         String submittedEmail = "Unknown@Example.com";
         String normalizedEmail = "unknown@example.com";
 
-        when(userRepository.findByEmail(normalizedEmail)).thenReturn(Optional.empty());
+        when(userRepository.findByEmailForUpdate(normalizedEmail)).thenReturn(Optional.empty());
 
         // Act
         resendService.resend(submittedEmail);
 
         // Assert
-        verify(userRepository).findByEmail(normalizedEmail);
+        verify(userRepository).findByEmailForUpdate(normalizedEmail);
 
         verifyNoInteractions(
                 tokenRepository,
@@ -80,7 +80,7 @@ class ResendEmailVerificationServiceTest {
                         OffsetDateTime.now().plusMinutes(30)
                 );
 
-        when(userRepository.findByEmail("vinay@example.com"))
+        when(userRepository.findByEmailForUpdate("vinay@example.com"))
                 .thenReturn(Optional.of(user));
 
         when(tokenRepository.findTopByUserOrderByCreatedAtDesc(user))
@@ -135,7 +135,7 @@ class ResendEmailVerificationServiceTest {
         EmailVerificationToken latestToken =
                 mock(EmailVerificationToken.class);
 
-        when(userRepository.findByEmail("vinay@example.com"))
+        when(userRepository.findByEmailForUpdate("vinay@example.com"))
                 .thenReturn(Optional.of(user));
 
         when(tokenRepository.findTopByUserOrderByCreatedAtDesc(user))
@@ -164,7 +164,7 @@ class ResendEmailVerificationServiceTest {
         // Arrange
         User user = new User("vinay@example.com", "password-hash");
 
-        when(userRepository.findByEmail("vinay@example.com"))
+        when(userRepository.findByEmailForUpdate("vinay@example.com"))
                 .thenReturn(Optional.of(user));
 
         when(tokenRepository.findTopByUserOrderByCreatedAtDesc(user))
@@ -202,7 +202,7 @@ class ResendEmailVerificationServiceTest {
         User user = new User("vinay@example.com", "password-hash");
         user.activateAfterEmailVerification();
 
-        when(userRepository.findByEmail("vinay@example.com"))
+        when(userRepository.findByEmailForUpdate("vinay@example.com"))
                 .thenReturn(Optional.of(user));
 
         // Act

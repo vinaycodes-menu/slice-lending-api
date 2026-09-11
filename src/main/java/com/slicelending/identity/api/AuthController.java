@@ -1,9 +1,6 @@
 package com.slicelending.identity.api;
 
-import com.slicelending.identity.application.EmailVerificationResult;
-import com.slicelending.identity.application.EmailVerificationTokenService;
-import com.slicelending.identity.application.RegistrationService;
-import com.slicelending.identity.application.ResendEmailVerificationService;
+import com.slicelending.identity.application.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +13,13 @@ public class AuthController {
     private final RegistrationService registrationService;
     private final EmailVerificationTokenService emailVerificationTokenService;
     private final ResendEmailVerificationService resendEmailVerificationService;
+    private final LoginService loginService;
 
-    public AuthController(RegistrationService registrationService, EmailVerificationTokenService emailVerificationTokenService, ResendEmailVerificationService resendEmailVerificationService) {
+    public AuthController(RegistrationService registrationService, EmailVerificationTokenService emailVerificationTokenService, ResendEmailVerificationService resendEmailVerificationService, LoginService loginService) {
         this.registrationService = registrationService;
         this.emailVerificationTokenService = emailVerificationTokenService;
         this.resendEmailVerificationService = resendEmailVerificationService;
+        this.loginService = loginService;
     }
 
     @PostMapping("/register")
@@ -56,6 +55,14 @@ public class AuthController {
         );
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ){
+        LoginResponse response = loginService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
 
