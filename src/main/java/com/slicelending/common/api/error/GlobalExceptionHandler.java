@@ -5,6 +5,8 @@ import com.slicelending.identity.application.exception.DuplicateEmailException;
 import com.slicelending.identity.application.exception.ExpiredVerificationTokenException;
 import com.slicelending.identity.application.exception.InvalidCredentialsException;
 import com.slicelending.identity.application.exception.InvalidVerificationTokenException;
+import com.slicelending.loanapplication.application.exception.ActiveLoanApplicationAlreadyExistsException;
+import com.slicelending.loanapplication.application.exception.CustomerNotEligibleForLoanApplicationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -135,6 +137,44 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(status).body(errorResponse);
 
+    }
+
+    @ExceptionHandler(ActiveLoanApplicationAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleActiveLoanApplicationAlreadyExists(
+            ActiveLoanApplicationAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                "ACTIVE_LOAN_APPLICATION_ALREADY_EXISTS",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    @ExceptionHandler(CustomerNotEligibleForLoanApplicationException.class)
+    public ResponseEntity<ApiErrorResponse> handleCustomerNotEligible(
+            CustomerNotEligibleForLoanApplicationException exception,
+            HttpServletRequest request
+    ){
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                "CUSTOMER_NOT_ELIGIBLE",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
 }
